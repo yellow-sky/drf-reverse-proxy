@@ -23,7 +23,7 @@ ERRORS_MESSAGES = {
     'upstream-no-scheme': "Upstream URL scheme must be either 'http' or 'https' (%s)."
 }
 
-HTTP_POOLS = PoolManager()
+HTTP_POOLS = urllib3.PoolManager()
 
 
 class ProxyView(APIView):
@@ -108,6 +108,12 @@ class ProxyView(APIView):
 
         return request_headers
 
+    def get_query_params(self):
+        if requset.GET:
+            return request.GET.lists()
+        else:
+            return []
+    
     def _created_proxy_response(self, request, path):
         request_payload = request.body
 
@@ -118,8 +124,9 @@ class ProxyView(APIView):
 
         self.log.debug("Request URL: %s", request_url)
 
-        if request.GET:
-            get_data = encode_items(request.GET.lists())
+        query_params = self.get_query_params()
+        if query_params:
+            get_data = encode_items(query_params)
             request_url += '?' + urlencode(get_data)
             self.log.debug("Request URL: %s", request_url)
 
